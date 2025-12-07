@@ -1,0 +1,10 @@
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-text-splitters
+langchain-qdrant
+langchain-ollama
+qdrant-client
+fastapi
+uvicorn
+python-multipart
+pypdf

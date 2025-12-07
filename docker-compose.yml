@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: rag-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - rag-network
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: rag-qdrant
+    ports:
+      - "6333:6333"  # REST API
+      - "6334:6334"  # gRPC API
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - rag-network
+
+  rag-app:
+    build: ./rag-app
+    container_name: rag-application
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./documents:/documents
+      - ./data:/data
+    environment:
+      - OLLAMA_HOST=http://rag-ollama:11434
+      - QDRANT_HOST=rag-qdrant
+      - QDRANT_PORT=6333
+    depends_on:
+      - ollama
+      - qdrant
+    networks:
+      - rag-network
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    ports:
+      - "8080:8080"
+    volumes:
+      - searxng-data:/etc/searxng
+    networks:
+      - rag-network
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    ports:
+      - "3000:8080"
+    volumes:
+      - open-webui-data:/app/backend/data
+    environment:
+      - OLLAMA_BASE_URL=http://rag-ollama:11434
+      - WEBUI_SECRET_KEY=supersecretkey
+      - ENABLE_RAG_WEB_SEARCH=true
+      - RAG_EMBEDDING_ENGINE=ollama
+      - RAG_EMBEDDING_MODEL=nomic-embed-text
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - ollama
+      - qdrant
+      - searxng
+    networks:
+      - rag-network
+
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - jupyter-data:/home/jovyan/work
+      - ./documents:/home/jovyan/documents:ro
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=mysecrettoken123
+      - OLLAMA_HOST=http://rag-ollama:11434
+      - QDRANT_HOST=http://rag-qdrant:6333
+    networks:
+      - rag-network
+    restart: unless-stopped
+
+
+networks:
+  rag-network:
+    driver: bridge
+
+volumes:
+  ollama-data:
+  qdrant-data:
+  searxng-data:
+  open-webui-data:
+  jupyter-data:

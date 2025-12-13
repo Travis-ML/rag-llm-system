@@ -1,0 +1,16 @@
+# Ollama Logger Configuration
+logging:
+  enabled: false  # Set to true to enable logging to Splunk HEC
+  
+  hec:
+    url: "https://your-splunk-server.com:8088/services/collector"
+    token: ""
+    verify_ssl: false
+    retry_attempts: 3
+  
+  fields:
+    max_prompt_length: 500
+    max_response_length: 1000
+
+ollama:
+  host: "http://rag-ollama:11434"

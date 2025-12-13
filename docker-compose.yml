@@ -18,6 +18,40 @@ services:
     networks:
       - rag-network
 
+  ollama-logger:
+    build: ./ollama-logger
+    container_name: ollama-logger
+    ports:
+      - "11435:11435"
+    env_file:
+      - .env
+    environment:
+      - OLLAMA_HOST=http://rag-ollama:11434
+    depends_on:
+      - ollama
+    networks:
+      - rag-network
+    restart: unless-stopped
+
+  splunk:
+    image: splunk/splunk:latest
+    container_name: splunk
+    ports:
+      - "8001:8000"   # Splunk Web UI (mapped to 8001 to avoid conflict)
+      - "8088:8088"   # HEC (HTTP Event Collector)
+      - "9997:9997"   # Splunk forwarder
+    environment:
+      - SPLUNK_START_ARGS=--accept-license
+      - SPLUNK_PASSWORD=changeme123
+      - SPLUNK_HEC_TOKEN=561f21cc-3d7d-4012-aabe-123ea66dbd39
+      - SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com
+    volumes:
+      - splunk-data:/opt/splunk/var
+      - splunk-etc:/opt/splunk/etc
+    networks:
+      - rag-network
+    restart: unless-stopped
+
   qdrant:
     image: qdrant/qdrant:latest
     container_name: rag-qdrant
@@ -53,7 +87,9 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - searxng-data:/etc/searxng
+      - ./searxng-config/settings.yml:/etc/searxng/settings.yml:ro
+    environment:
+      - SEARXNG_BASE_URL=http://searxng:8080
     networks:
       - rag-network
 
@@ -65,15 +101,22 @@ services:
     volumes:
       - open-webui-data:/app/backend/data
     environment:
-      - OLLAMA_BASE_URL=http://rag-ollama:11434
+      - OLLAMA_BASE_URL=http://ollama-logger:11435
       - WEBUI_SECRET_KEY=supersecretkey
       - ENABLE_RAG_WEB_SEARCH=true
       - RAG_EMBEDDING_ENGINE=ollama
       - RAG_EMBEDDING_MODEL=nomic-embed-text
+      - RAG_WEB_SEARCH_ENGINE=searxng
+      - SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>
+      - RAG_WEB_SEARCH_RESULT_COUNT=3
+      - RAG_WEB_SEARCH_CONCURRENT_REQUESTS=10
+      - VECTOR_DB=qdrant
+      - QDRANT_URI=http://rag-qdrant:6333
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
       - ollama
+      - ollama-logger
       - qdrant
       - searxng
     networks:
@@ -107,3 +150,5 @@ volumes:
   searxng-data:
   open-webui-data:
   jupyter-data:
+  splunk-data:
+  splunk-etc:

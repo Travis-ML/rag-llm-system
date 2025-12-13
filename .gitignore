@@ -28,6 +28,7 @@ venv/
 # IDE
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
@@ -43,6 +44,10 @@ logs/
 # Environment
 .env
 .env.local
+*.token
+
+# Ollama logger secrets
+ollama-logger/config.local.yaml
 
 # Temporary files
 *.tmp

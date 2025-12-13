@@ -1,0 +1,43 @@
+# SearXNG Configuration for Open WebUI Integration
+# Enable JSON format for API access
+
+use_default_settings: true
+
+search:
+  # Enable all output formats including JSON
+  formats:
+    - html
+    - json
+
+server:
+  # Listen on all interfaces inside container
+  bind_address: "0.0.0.0"
+  port: 8080
+
+  # Disable secret key requirement for local use
+  secret_key: "changeme_for_production"
+
+  # Disable limiter for local Docker network
+  limiter: false
+
+  # Allow HTTP method filter
+  method: "POST"
+
+  # Allow JSON format
+  http_protocol_version: "1.1"
+
+# Enable engines for general search
+engines:
+  - name: google
+    disabled: false
+  - name: duckduckgo
+    disabled: false
+  - name: brave
+    disabled: false
+  - name: wikipedia
+    disabled: false
+
+# Disable bot detection for local API use
+outgoing:
+  request_timeout: 10.0
+  max_request_timeout: 15.0

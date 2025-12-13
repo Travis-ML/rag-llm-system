@@ -101,8 +101,10 @@ cd rag-llm-system/rag-system
 # Copy the example configuration
 cp .env.example .env
 
-# Logging is enabled by default and currently required
-# The .env file contains Splunk HEC configuration
+# (Optional) Generate a unique HEC token for production:
+# Windows: powershell -Command "[guid]::NewGuid().ToString()"
+# Linux/Mac: uuidgen | tr '[:upper:]' '[:lower:]'
+# Edit .env and replace SPLUNK_HEC_TOKEN with your generated UUID
 ```
 
 3. **Start all services:**

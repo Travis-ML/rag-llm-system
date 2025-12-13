@@ -43,7 +43,7 @@ services:
     environment:
       - SPLUNK_START_ARGS=--accept-license
       - SPLUNK_PASSWORD=changeme123
-      - SPLUNK_HEC_TOKEN=561f21cc-3d7d-4012-aabe-123ea66dbd39
+      - SPLUNK_HEC_TOKEN=${SPLUNK_HEC_TOKEN:-00000000-0000-0000-0000-000000000000}
       - SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com
     volumes:
       - splunk-data:/opt/splunk/var
